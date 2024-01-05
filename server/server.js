@@ -30,11 +30,9 @@ app.post("/signup", async (req, res) => {
       email: req.body.email,
       password: newPassword,
     });
-    const token = jwt.sign(
-        {email: User.email, id:User.id},
-        "secret123",
-        {expiresIn: "1h"}
-    )
+    const token = jwt.sign({ email: User.email, id: User.id }, "secret123", {
+      expiresIn: "1h",
+    });
 
     res.json({ status: "ok", token: token });
   } catch (error) {
@@ -51,7 +49,7 @@ app.post("/signin", async (req, res) => {
     });
 
     if (!user) {
-      return res.json({ status: "error", error: "User not found" })
+      return res.json({ status: "error", error: "User not found" });
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -68,8 +66,7 @@ app.post("/signin", async (req, res) => {
         "secret123"
       );
       return res.json({ status: "ok", token: token });
-    }
-    else {
+    } else {
       return res.json({ status: "error", error: "Invalid password" });
     }
   } catch (error) {
@@ -80,29 +77,83 @@ app.post("/signin", async (req, res) => {
 
 // Table uchun
 
-app.post("/profile",async (req,res) => {
+app.post("/profile", async (req, res) => {
   try {
-    const newData = new Table(req.body)
-    await newData.save()
-    res.status(201).json({status: "ok",success: true, message: "Malumot saqlandi"})
+    const newData = new Table(req.body);
+    await newData.save();
+    res
+      .status(201)
+      .json({ status: "ok", success: true, message: "Malumot saqlandi" });
   } catch (error) {
-    console.error(error)
-    res.status(500).json({status: "error",success: false,message: "Malumot yuborilmadi.Xatolik yuz berdi"})
+    console.error(error);
+    res.status(500).json({
+      status: "error",
+      success: false,
+      message: "Malumot yuborilmadi.Xatolik yuz berdi",
+    });
   }
-})
-app.get("/table",async (req,res) => {
-  try{
-    const data = await Table.find()
-    res.status(200).json(data)
-  }catch(error){
-    console.error(error)
-    res.status(500).json({success: false,message:"Xatolik yuz berdi"})
+});
+app.get("/table", async (req, res) => {
+  try {
+    const data = await Table.find();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Xatolik yuz berdi" });
   }
-})
+});
+// table delete
+app.post("/deleteData", async (req, res) => {
+  const { id } = req.body;
+  try {
+    await Table.deleteOne({ _id: id });
+    res.send({ status: "ok", success: "Data Deleted" });
+  } catch (error) {
+    console.error("Malumotni o'chirishda xatolik yuz berdi:", error);
+    res
+      .status(500)
+      .send({
+        status: "error",
+        success: false,
+        message: "Server xatoligi yuz berdi.",
+      });
+  }
+});
+// table edit
+app.get("/table/edit/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await Table.findById(id);
 
+    if (!data) {
+      return res.status(404).json({ error: "Malumot topilmadi." });
+    }
 
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Server xatosi." });
+  }
+});
+
+app.put("/table/edit/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updatedData = req.body;
+
+    const data = await Table.findByIdAndUpdate(id, updatedData, { new: true });
+
+    if (!data) {
+      return res.status(404).json({ error: "Malumot topilmadi" });
+    }
+    else{
+      res.json(data)
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server xatosi" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`server started ${PORT}`);
 });
-
