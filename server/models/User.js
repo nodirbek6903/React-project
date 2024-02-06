@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     quote:{type: String},
+    links: {
+      github: String,
+      telegram: String,
+      instagram: String,
+      linkedin: String,
+    },
+    locationHome: String,
   },
   {
     collection: "users",

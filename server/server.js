@@ -6,8 +6,7 @@ const User = require("./models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Table = require("./data/database");
-const SocialLink = require("./SocialLinks/social_link")
-const multer = require("multer")
+// const multer = require("multer")
 
 app.use(cors());
 app.use(express.json());
@@ -63,7 +62,7 @@ app.post("/signup", async (req, res) => {
     const token = jwt.sign(
       { email: req.body.email, id: newUser.id, username: req.body.username },
       "secret123",
-      { expiresIn: "168h" }
+      { expiresIn: "365d" }
     );
     res.json({ status: "ok", token: token });
 
@@ -110,7 +109,7 @@ app.post("/signin", async (req, res) => {
 // myprofile
 app.get('/user/:username', authenticateToken, async (req, res) => {
   try {
-    const { email, id, username,firstname,lastname,password } = req.user;
+    const {id, username,firstname,lastname,password } = req.user;
 
     const user = await User.findById(id);
 
@@ -120,8 +119,9 @@ app.get('/user/:username', authenticateToken, async (req, res) => {
         firstname: user.firstname,
         lastname:user.lastname,
         username: user.username,
-        email: user.email,
-        password:user.password
+        password:user.password,
+        links: user.links,
+        locationHome: user.locationHome
       });
     } else {
       res.status(404).json({ error: 'User not found' });
@@ -131,6 +131,7 @@ app.get('/user/:username', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Internal Server error' });
   }
 });
+
 //edit  profile get qismi
 app.get('/user-edit/:username', authenticateToken, async (req, res) => {
   try {
@@ -144,8 +145,9 @@ app.get('/user-edit/:username', authenticateToken, async (req, res) => {
         firstname: user.firstname,
         lastname:user.lastname,
         username: user.username,
-        email: user.email,
-        password:user.password
+        password:user.password,
+        locationHome: user.locationHome,
+        links:user.links
       });
     } else {
       res.status(404).json({ error: 'User not found' });
@@ -162,7 +164,10 @@ app.put("/user-edit/:username",authenticateToken, async (req, res) => {
     const username = req.params.username;
     const updatedData = req.body;
 
-    const data = await User.findOneAndUpdate({ username: username }, updatedData, { new: true });
+    const data = await User.findOneAndUpdate(
+      { username: username },
+       {$set: {"links": updatedData.links, "locationHome": updatedData.locationHome}},
+        { new: true });
 
     if (!data) {
       return res.status(404).json({ error: "Malumot topilmadi" });
@@ -175,43 +180,9 @@ app.put("/user-edit/:username",authenticateToken, async (req, res) => {
   }
 });
 
-// social links
+// table va profile qismlari uchun
 
-app.post("/social-links",authenticateToken, async (req,res) => {
-  try {
-    const newData = new SocialLink(req.body);
-    await newData.save();
-    res.status(201).json({ status: "ok", success: true, message: "Malumot saqlandi" });
-
-    const token = jwt.sign(
-      { email: req.body.email, id: newUser.id, username: req.body.username },
-      "secret123",
-      { expiresIn: "168h" }
-    );
-    res.json({ status: "ok", token: token,success: true, message: "Malumot saqlandi"});
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      status: "error",
-      success: false,
-      message: "Malumot yuborilmadi.Xatolik yuz berdi",
-    });
-  }
-})
-
-app.get("/links",authenticateToken, async (req,res) => {
-  try {
-    const data = await SocialLink.find();
-    res.status(200).json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Xatolik yuz berdi" });
-  }
-})
-
-
-// Table uchun
+//profile uchun
 
 app.post("/profile", async (req, res) => {
   try {
@@ -227,6 +198,9 @@ app.post("/profile", async (req, res) => {
     });
   }
 });
+
+// Table uchun
+
 app.get("/table", async (req, res) => {
   try {
     const data = await Table.find();
@@ -275,7 +249,7 @@ app.post("/deleteData", async (req, res) => {
   const { id } = req.body;
   try {
     await Table.deleteOne({ _id: id });
-    res.send({ status: "ok", success: "Data Deleted" });
+    res.send({ status: "ok", success: "Data deleted successfully" });
   } catch (error) {
     console.error("Malumotni o'chirishda xatolik yuz berdi:", error);
     res
