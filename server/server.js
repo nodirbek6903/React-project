@@ -199,6 +199,18 @@ app.post("/profile", async (req, res) => {
   }
 });
 
+app.get("/check-username/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const existingUser = await Table.findOne({ username });
+    res.status(200).json({ available: !existingUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server xatosi" });
+  }
+});
+
+
 // Table uchun
 
 app.get("/table", async (req, res) => {
@@ -210,6 +222,7 @@ app.get("/table", async (req, res) => {
     res.status(500).json({ success: false, message: "Xatolik yuz berdi" });
   }
 });
+
 // table edit
 app.get("/table/edit/:id", async (req, res) => {
   try {
