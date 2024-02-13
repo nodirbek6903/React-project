@@ -159,15 +159,24 @@ app.get('/user-edit/:username', authenticateToken, async (req, res) => {
 });
 
 // edit profile put qismi
-app.put("/user-edit/:username",authenticateToken, async (req, res) => {
+app.put("/user-edit/:username", authenticateToken, async (req, res) => {
   try {
     const username = req.params.username;
     const updatedData = req.body;
 
     const data = await User.findOneAndUpdate(
       { username: username },
-       {$set: {"links": updatedData.links, "locationHome": updatedData.locationHome}},
-        { new: true });
+      {
+        $set: {
+          "links.github": updatedData.links.github,
+          "links.telegram": updatedData.links.telegram,
+          "links.instagram": updatedData.links.instagram,
+          "links.linkedin": updatedData.links.linkedin,
+          "locationHome": updatedData.locationHome
+        }
+      },
+      { new: true }
+    );
 
     if (!data) {
       return res.status(404).json({ error: "Malumot topilmadi" });
@@ -180,10 +189,8 @@ app.put("/user-edit/:username",authenticateToken, async (req, res) => {
   }
 });
 
-// table va profile qismlari uchun
 
 //profile uchun
-
 app.post("/profile", async (req, res) => {
   try {
     const newData = new Table(req.body);
