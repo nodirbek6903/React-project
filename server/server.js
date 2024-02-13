@@ -210,7 +210,6 @@ app.get("/check-username/:username", async (req, res) => {
   }
 });
 
-
 // Table uchun
 
 app.get("/table", async (req, res) => {
